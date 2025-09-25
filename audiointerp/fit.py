@@ -293,7 +293,7 @@ class Trainer:
     
         torch.save(self.model.state_dict(), save_weights_path)
         if self.verbose:
-            tqdm.write(f"Модель сохранена в {save_weights_path}")
+            tqdm.write(f"Model saved to {save_weights_path}")
 
         test_loss, test_acc = self.test()
 

@@ -249,5 +249,5 @@ class Predict:
             df.to_csv(os.path.join(csv_dir, f"{mtype}.csv"),
                       index_label="sample")
 
-        print(f"Все CSV-файлы сохранены в {csv_dir}")
+        print(f"All CSV-files saved to {csv_dir}")
         return {mtype: list(mdict.keys()) for mtype, mdict in results.items()}
