@@ -18,6 +18,7 @@ def plot_learning_curves(train_losses, val_losses, train_accs=None, val_accs=Non
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.title("Loss Curve")
+    plt.grid(True)
     plt.legend()
 
     plt.subplot(1, 2, 2)
@@ -28,6 +29,7 @@ def plot_learning_curves(train_losses, val_losses, train_accs=None, val_accs=Non
     plt.xlabel("Epoch")
     plt.ylabel("Accuracy")
     plt.title("Accuracy Curve")
+    plt.grid(True)
     plt.legend()
 
     plt.tight_layout()
