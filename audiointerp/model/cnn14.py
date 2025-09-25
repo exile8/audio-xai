@@ -136,11 +136,11 @@ class TransferCnn14(nn.Module):
     def load_base_weights(self, path_to_weights=None):
         import os
         if not os.path.exists(path_to_weights):
-            if not os.path.isdir("weights"):
-                os.makedirs("weights")
+            if not os.path.isdir("pretrained"):
+                os.makedirs("pretrained")
 
-            os.system("wget https://zenodo.org/records/3987831/files/Cnn14_mAP=0.431.pth -P weights")
-            path_to_weights = os.path.join("weights", "Cnn14_mAP=0.431.pth")
+            os.system("wget --progress=bar:force:noscroll https://zenodo.org/records/3987831/files/Cnn14_mAP=0.431.pth -P pretrained")
+            path_to_weights = os.path.join("pretrained", "Cnn14_mAP=0.431.pth")
 
         weights_full = torch.load(path_to_weights)["model"]
 
