@@ -43,7 +43,8 @@ class LIMEInterpreter(BaseInterpreter):
             input_img,
             classifier_fn=predict_fn,
             top_labels=1,
-            num_samples=self.num_samples
+            num_samples=self.num_samples,
+            progress_bar=False
         )
         
         segments = explanation.segments

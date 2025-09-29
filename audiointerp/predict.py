@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import gc
 from collections import defaultdict
+from tqdm.auto import tqdm
 
 
 def make_exp_dirs(root, model_type, method_name):
@@ -173,7 +174,7 @@ class Predict:
     def compute_and_save_interpretations_set(self, dataloader, save_path, start_from_sample=1):
         os.makedirs(save_path, exist_ok=True)
 
-        for iter_num, (wavs, y) in enumerate(dataloader, start=1):
+        for iter_num, (wavs, y) in enumerate(tqdm(dataloader), start=1):
 
             if iter_num < start_from_sample:
                 continue
@@ -205,7 +206,7 @@ class Predict:
 
         results = defaultdict(lambda: defaultdict(list))
 
-        for iter_num, (wavs, y) in enumerate(dataloader, start=1):
+        for iter_num, (wavs, y) in enumerate(tqdm(dataloader), start=1):
             interp_file = os.path.join(attr_dir, f'iter_{iter_num}.pt')
             interpretations = torch.load(interp_file).to(self.device)
 
