@@ -30,7 +30,7 @@ jupyter_core==5.8.1
 kiwisolver==1.4.9
 lazy_loader==0.4
 librosa==0.11.0
-lime==0.2.0.1
+git+https://github.com/marcotcr/lime.git
 llvmlite==0.45.0
 MarkupSafe==2.1.5
 matplotlib==3.10.6
