@@ -35,7 +35,37 @@ This project is focused on the task of constructing interpretations for machine 
 └── README.md
 ```
 
-## 3. Environment
+## 3. Methodology
+
+The methodology in this project follows a three-stage workflow:
+
+1. **Attribution**
+
+Feature attribution maps are generated for each input sample using popular feature attribution methods:
+- ***Saliency***,
+- ***Grad-CAM***, 
+- ***LIME***,
+- ***SHAP***.
+
+These maps highlight the time-frequency components of spectrograms which influence the model's decision the most.
+
+2. **Masking**
+
+The obtained attribution maps are then used to create *binary or continuous masks*. Each mask preserves or removes regions of spectrogram according to importance values. The masking strategies include:
+- ***binarization***,
+- ***minmax normalization***,
+- ***sigmoid***,
+- ***topK%***.
+
+The masked spectrograms are ***reconstructed back into audio signals***, allowing for perceptual evaluation.
+
+3. **Evaluation**
+
+The fidelity and perceptual simplicity of each interpretation are assessed using the set of metrics.
+
+This approach is strongly inspired by the work of Paissan, et al [1]. However, this project focuses on using ***standard inerpretation methods*** instead of an encoder-based setup and explores ***multiple masl types***.
+
+## 4. Environment
 
 * OS: Ubuntu 22.04
 * NVIDIA RTX A6000 GPU
@@ -47,7 +77,59 @@ To install dependencies:
 pip install -r requirements.txt
 ```
 
-## 4. Reproducing the results
+## 5. `audiointerp` module
+
+## 6. Example usage
+
+```python
+import torch, torchaudio
+from audiointerp.model.cnn14 import TransferCnn14
+from audiointerp.interpretation.gradcam import GradCAMInterpreter
+from audiointerp.processing.spectrogram import LogMelSTFTSpectrogram
+from audiointerp.predict import Predict
+
+# load audio
+wav, _ = torchaudio.load("samples/crow.wav")
+
+# Normalize
+abs_max = wav.abs().max()
+if abs_max != 0:
+    wav /= abs_max
+
+# feature extractor (Mel, dB)
+sr = 32000
+n_fft = 1024
+hop_length = 320
+win_length = 1024
+n_mels = 64
+f_min = 50
+f_max = 14000
+top_db = None
+
+feature_extractor = LogMelSTFTSpectrogram(
+    n_fft=n_fft, win_length=win_length, hop_length=hop_length,
+    sample_rate=sr, n_mels=n_mels, f_min=f_min, f_max=f_max, top_db=top_db,
+    return_phase=True, return_full_db=True
+)
+
+# pretrained model
+model = TransferCnn14(50, 64)
+model.load_state_dict(torch.load("weights/logmel_cnn14.pth"))
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+# Grad-CAM interpreter
+predict_gradcam_mel = Predict(model, feature_extractor, interp_method_cls=GradCAMInterpreter, interp_method_kwargs={"target_layers": [model.base.conv_block6.conv2]}, device=device)
+
+# interpret the sample
+predict_gradcam_mel.predict(
+    wav=wav, wav_name="crow_gradcam", sr=sr, feature_type="mel",
+    silence_val=-100, fmin=50, fmax=14000,
+    save_root="sample_pred", model_type="mel"
+)
+```
+
+## 7. Reproducing the results
 1. **Prepare the dataset**
    
 The experiments were conducted on the *ESC-50* [9] dataset.
@@ -108,14 +190,16 @@ You can analyze and visualize the results using the following notebooks:
     - summary tables consistent with the ones provided in the paper.
 - `illustration.ipynb` - generate visual and audible interpretations for an audio sample, e.g. from the `samples` directory. This notebooks also reproduces the illustrative figure from the paper.
 
-## 5. Supplementary materials
+## 8. Supplementary materials
 
 The `supplementary` directory contains additional materials referenced in the paper:
 - a PDF version of the complete set of tables generated using `tables.ipynb`,
 - the high-resolution illustrartion from the paper,
 - the full set of visual and audible interpretations for the sample `samples/cat.wav`.
+
+## 9. Extending the project
   
-## 6. Correspondence between audio files in this repository and ESC-50 dataset
+## 10. Correspondence between audio files in this repository and ESC-50 dataset
 
 The `samples` directory contains 5 audio files sourced from the ESC-50 dataset [9]. The following table maps the filenames used in this repository to their corresponding filenames in the original dataset.
 
@@ -129,7 +213,7 @@ The `samples` directory contains 5 audio files sourced from the ESC-50 dataset [
 |  cat.wav                          |  5-177614-A-5.wav            |
 
 
-## 7. References
+## 11. References
 [1]: Paissan F., Ravanelli M., Subakan C. [Listenable maps for audio classifiers]((https://doi.org/10.48550/arXiv.2403.13086)). arXiv preprint arXiv:2403.13086 (2024).
 
 [2]: [LMAC code](https://github.com/speechbrain/speechbrain/tree/develop/recipes/ESC50/interpret).
