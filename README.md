@@ -2,6 +2,18 @@
 
 This repository contains code accompanying the paper *Constructing Post-hoc Interpretations for Audio Classification Models* (in preparation).
 
+## Table of contents
+1. [Overview](#overview)
+2. [Project structure](#project-structure)
+3. [Methodology](#methodology)
+4. [Environment](#environment)
+5. [`audionterp` module](#audiointerp-module)
+6. [Example Usage](#example-usage)
+7. [Reproducing the results](#reproducing-the-results)
+8. [Supplementary materials](#supplementary-materials)
+9. [Correspondence between audio files in this repository and ESC-50 dataset](#correspondence-between-audio-files-in-this-repository-and-ESC-50-dataset)
+10. [References](#references)
+
 ## 1. Overview
 
 This project is focused on the task of constructing interpretations for machine learning models that classify audio data presented in the form of spectrograms. In this work, we explore the approach that involves masking spectrograms based on feature attribution maps and subsequently reconstructing the signal. The methods Saliency, Grad-CAM and SHAP are employed for feature attribution maps generation. The effectiveness of this pipeline is evaluated in terms of the fidelity of the intepretations to the model's behavior and their perceptual simplicity. Experiments are conducted with four different types of masks and with the addition of three kinds of background noise.
@@ -63,7 +75,7 @@ The masked spectrograms are ***reconstructed back into audio signals***, allowin
 
 The fidelity and perceptual simplicity of each interpretation are assessed using the set of metrics.
 
-This approach is strongly inspired by the work of Paissan, et al [1]. However, this project focuses on using ***standard inerpretation methods*** instead of an encoder-based setup and explores ***multiple masl types***.
+This approach is strongly inspired by the work of Paissan, et al [1, 2]. However, this project focuses on using ***standard interpretation methods*** instead of an encoder-based setup and explores ***multiple mask types***.
 
 ## 4. Environment
 
@@ -78,6 +90,36 @@ pip install -r requirements.txt
 ```
 
 ## 5. `audiointerp` module
+```
+audiointerp/
+├── dataset/
+│   ├── base.py          # base dataset class defining common loading and preprocessing logic
+│   └── esc50.py         # ESC-50 dataset handler inheriting from BaseAudioDataset
+│
+├── interpretation/
+│   ├── base.py          # abstract interface for interpretation methods (BaseInterpreter)
+│   ├── saliency.py      # Saliency interpretation
+│   ├── gradcam.py       # Grad-CAM interpretation
+│   ├── lime.py          # LIME interpretation
+│   └── shap.py          # SHAP interpretation
+│
+├── model/
+│   └── cnn14.py         # TransferCnn14 model with pretrained Cnn14 backbone (PANNs architecture)
+│
+├── processing/
+│   ├── baseprocessor.py # abstract base for feature processing pipelines
+│   └── spectrogram.py   # STFT and Mel spectrogram computation and inversion
+│
+├── fit.py               # model training and fine-tuning routines
+├── predict.py           # batch and single sample prediction, attribution execution, metric evaluation + visualization
+└── metrics.py           # evaluation metrics for interpretation fidelity and simplicity
+```
+
+This module implements the procedure described in the *Methodology* section. The design of this module follows and object-oriented structure with base classes defining common interfaces for dataset handling, interpretation and preprocessing.
+
+This module allows for extension: new interpretation methods, preprocessing routines and datasets can be added by subclassing the corresponding base class.
+
+The implementations of interpretation methods utilize the libraries and source code from ***captum*** (Saliency) [3], ***Crad-CAM repository*** [4], ***LIME repository*** [5] and ***SHAP repository*** [6]. The implementation of fidelity metrics is adapted from [2], and perceptual simplicity metrics utilize the ***quantus*** library [7].
 
 ## 6. Example usage
 
@@ -132,14 +174,14 @@ predict_gradcam_mel.predict(
 ## 7. Reproducing the results
 1. **Prepare the dataset**
    
-The experiments were conducted on the *ESC-50* [9] dataset.
+The experiments were conducted on the ***ESC-50*** [8] dataset.
 - Download the dataset [here](https://github.com/karolpiczak/ESC-50);
 - Unpack and place the dataset in the desired directory.
 In the notebooks, you will find fields where you can specify the path to this directory.
 
 2. **Download pretrained weights (optional)**
    
-The experiments use a pretrained model *Cnn14* [8]. The pipeline supports automatic downloading of pretrained weights. Alternatively, the weights can be downloaded manually:
+The experiments use a pretrained model ***Cnn14*** [9]. The pipeline supports automatic downloading of pretrained weights. Alternatively, the weights can be downloaded manually:
 ```bash
 wget https://zenodo.org/records/3987831/files/Cnn14_mAP=0.431.pth -P pretrained
 ```
@@ -150,7 +192,7 @@ The code will detect the weights in the `pretrained` directory automatically.
 To train the models, use the notebooks `train_model_stft.ipynb` and `train_model_mel.ipynb`. The provided notebooks fine-tune pretrained model on STFT and Mel spectrogram respresentations, respectively.
 > All hyperparameters and experimental settings are explicitely defined within each notebook.
 
-During training, the *SpecAugment* [9] method is used.
+During training, the ***SpecAugment*** [10] method is used.
 
 The resulting models are automatically saved to `weights`.
 
@@ -168,7 +210,7 @@ The `noises` directory contains 5-second fragments representing different types 
 
 To run the experiments, use the notebooks `experiments_mel_noise1.ipynb`, `experiments_mel_noise2.ipynb` and `experiments_mel_noise3.ipynb`.
 
-3. **Explore the results**
+5. **Explore the results**
 
 The results obtained from the previous step are stored in the `results` directory, following the structure:
 ```
@@ -196,10 +238,8 @@ The `supplementary` directory contains additional materials referenced in the pa
 - a PDF version of the complete set of tables generated using `tables.ipynb`,
 - the high-resolution illustrartion from the paper,
 - the full set of visual and audible interpretations for the sample `samples/cat.wav`.
-
-## 9. Extending the project
   
-## 10. Correspondence between audio files in this repository and ESC-50 dataset
+## 9. Correspondence between audio files in this repository and ESC-50 dataset
 
 The `samples` directory contains 5 audio files sourced from the ESC-50 dataset [9]. The following table maps the filenames used in this repository to their corresponding filenames in the original dataset.
 
@@ -213,7 +253,7 @@ The `samples` directory contains 5 audio files sourced from the ESC-50 dataset [
 |  cat.wav                          |  5-177614-A-5.wav            |
 
 
-## 11. References
+## 10. References
 [1]: Paissan F., Ravanelli M., Subakan C. [Listenable maps for audio classifiers]((https://doi.org/10.48550/arXiv.2403.13086)). arXiv preprint arXiv:2403.13086 (2024).
 
 [2]: [LMAC code](https://github.com/speechbrain/speechbrain/tree/develop/recipes/ESC50/interpret).
@@ -228,11 +268,11 @@ The `samples` directory contains 5 audio files sourced from the ESC-50 dataset [
 
 [7]: Hedström, Anna, et al. [Quantus: An explainable ai toolkit for responsible evaluation of neural network explanations and beyond](https://www.jmlr.org/papers/v24/22-0142.html). Journal of Machine Learning Research 24.34 (2023): 1-11.
 
-[8]: Qiuqiang Kong, Yin Cao, Turab Iqbal, Yuxuan Wang, Wenwu Wang, and Mark D. Plumbley. [Panns: Large-scale pretrained audio neural networks for audio pattern recognition](https://doi.org/10.1109/TASLP.2020.3030497). IEEE/ACM Transactions on Audio, Speech, and Language Processing 28 (2020): 2880-2894.
+[8]: K. J. Piczak. [ESC: Dataset for Environmental Sound Classification](https://dx.doi.org/10.1145/2733373.2806390). Proceedings of the 23rd Annual ACM Conference on Multimedia, Brisbane, Australia (2015).
 
-[9]: Park, Daniel S., et al. [Specaugment: A simple data augmentation method for automatic speech recognition](https://doi.org/10.21437/Interspeech.2019-2680). Interspeech 2019 (2019): 2613.
+[9]: Qiuqiang Kong, Yin Cao, Turab Iqbal, Yuxuan Wang, Wenwu Wang, and Mark D. Plumbley. [Panns: Large-scale pretrained audio neural networks for audio pattern recognition](https://doi.org/10.1109/TASLP.2020.3030497). IEEE/ACM Transactions on Audio, Speech, and Language Processing 28 (2020): 2880-2894.
 
-[10]: K. J. Piczak. [ESC: Dataset for Environmental Sound Classification](https://dx.doi.org/10.1145/2733373.2806390). Proceedings of the 23rd Annual ACM Conference on Multimedia, Brisbane, Australia (2015).
+[10]: Park, Daniel S., et al. [Specaugment: A simple data augmentation method for automatic speech recognition](https://doi.org/10.21437/Interspeech.2019-2680). Interspeech 2019 (2019): 2613.
 
 [11]: [White noise by theundecided (freesound.org)](https://freesound.org/people/theundecided/sounds/165058/).
 
